@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    var regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g;
+    var dictionary = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"];
+
+    function* tokenize(source) {
+      var result = null;
+      var lastIndex = 0;
+      while(true) { 
+        lastIndex = regexp.lastIndex;
+        result = regexp.exec(source);
+        if (!result)
+          break;
+        // 每次取出来的lastIndex与新生成的lastIndex比较，如果长度超了说明有不认识的字符或格式 break
+        if (regexp.lastIndex - lastIndex > result[0].length)
+          break;
+        let token = {
+          type: null,
+          value: null
+        }
+        // 从1开始 因为0是整个正则匹配到的
+        for(var i = 1; i <= dictionary.length; i++) {
+          if (result[i])
+            token.type = dictionary[i - 1];
+            // console.log(dictionary[i-1]);
+        }
+        token.value = result[0];
+        yield token;
+      }
+      // 用来表示结束
+      yield {
+        type: "EOF"
+      }
+    }
+
+    let source = [];
+    for(let token of tokenize("1 + 2 * 5 + 3")) {
+      if (token.type !== "Whitespace" && token.type !== "LineTerminator")
+        source.push(token);
+      // console.log(token);
+    }
+    console.log("source:", source);
+
+    function Expression(tokens) {
+      if (source[0].type === "AdditiveExpression" && source[1] && source[1].type === "EOF") {
+        let node = {
+          type: "Expression",
+          children: [source.shift(), source.shift()]
+        }
+        source.unshift(node);
+        return node;
+      }
+      AdditiveExpression(source);
+      return Expression(source);
+    }
+
+    function AdditiveExpression(source) {
+      // AdditiveExpression 包含了 MultiplicativeExpression 的所有逻辑
+      if (source[0].type === "MultiplicativeExpression") {
+        let node = {
+          type: "AdditiveExpression",
+          children: [source[0]]
+        }
+        source[0] = node;
+        return AdditiveExpression(source);
+      }
+      if (source[0].type === "AdditiveExpression" && source[1] && (source[1].type === "+" || source[1].type === "-")) {
+        let node = {
+          type: "AdditiveExpression",
+          operator: source[1].type,
+          children: []
+        }
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        // 第三项是个非终结符 所以我们需要调用一次 MultiplicativeExpression 处理
+        MultiplicativeExpression(source);
+        node.children.push(source.shift());
+        source.unshift(node);
+        return AdditiveExpression(source);
+      }
+      if (source[0].type === "AdditiveExpression")
+        return source[0];
+      // 当我们找到的是一个不认识的东西时，我们需要去调用一次 MultiplicativeExpression,然后再重新调用 AdditiveExpression
+      // 第一次进入 AdditiveExpression 时，会进入到这条分支来 第一个是Number 或者 MultiplicativeExpression没有完整执行的话 会两个都执行
+      MultiplicativeExpression(source);
+      return AdditiveExpression(source);
+    }
+
+    function MultiplicativeExpression(source) {
+      // MultiplicativeExpression 的开头有两种输入 Number 和 MultiplicativeExpression
+      // 第二个输入又有两个选项 * /
+      // console.log('source:', source);
+      if (source[0].type === "Number") {
+        let node = {
+          type: "MultiplicativeExpression",
+          children: [source[0]]
+        }
+        source[0] = node;
+        return MultiplicativeExpression(source);
+      }
+      if (source[0].type === "MultiplicativeExpression" && source[1] && (source[1].type === "*" || source[1].type === "/")) {
+        let node = {
+          type: "MultiplicativeExpression",
+          operator: source[1].type,
+          children: []
+        }
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        node.children.push(source.shift());
+        source.unshift(node);
+        return MultiplicativeExpression(source);
+      }
+      // 不是上述三种情况 将return掉
+      if (source[0].type === 'MultiplicativeExpression')
+        return source[0];
+      return MultiplicativeExpression(source);
+    }
+    console.log(Expression(source) )
+
+  </script>
+</body>
+</html>
