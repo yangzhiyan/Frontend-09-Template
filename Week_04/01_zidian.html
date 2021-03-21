@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // 截止符 使用Symbol创建是因为我们字符串中本来可能含有$
+    let $ = Symbol("$");
+    class Trie {
+      constructor() {
+        // 使用空对象来保存字典树里面的值，也可以使用map
+        // 使用 Object.create(null) 是为了避免受到 Object.prototype 原型上面的一些污染
+        this.root = Object.create(null);
+      }
+      // 将一个字符串插进字典树里面
+      insert(word) {
+        let node = this.root;
+        for(let c of word) {
+          // 如果子树不存在，创建子树
+          if(!node[c])
+            node[c] = Object.create(null);
+          // 让node到下一层级
+          node = node[c];
+        }
+        // 字符串可能有大量重复 ab / abc 为了区分两个为不同的字符串，需在字符串最后加一个截止符
+        if(!($ in node))
+          node[$] = 0;
+        node[$] ++
+      }
+      
+      most() {
+        let max = 0;
+        let maxWord = null;
+        let visit = (node, word) => {
+          if(node[$] && node[$] > max) {
+            max = node[$];
+            maxWord = word;
+          }
+          for(let p in node) {
+            visit(node[p], word + p);
+          }
+        }
+        visit(this.root, "");
+        console.log(maxWord, max);
+      }
+    }
+    // 产生一个随机的单词
+    function randomWord(length) {
+      var s = "";
+      for(let i = 0; i < length; i++) {
+        s += String.fromCharCode(Math.random() * 26 + "a".charCodeAt(0));
+      }
+      return s;
+    }
+    let trie = new Trie();
+    for(let i = 0; i < 10000; i++) {
+      trie.insert(randomWord(4))
+    }
+    // 还可以做字典树最小 字典树最大
+    // 对数字进行补位处理 比如 1 变成 0001 一万以内的数字求最大和最小
+  </script>
+</body>
+</html>

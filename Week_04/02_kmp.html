@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function kmp(source, pattern) {
+      // 计算table table的长度肯定是跟pattern一样的
+      let table = new Array(pattern.length).fill(0);
+      {
+        // 计算table 是查这个字符串里面有没有自重复 ,比如 abcdabce
+        // i 自重复串开始的位置，从1开始 j 已重复的字数
+        let i = 1, j = 0;
+        while(i < pattern.length) {
+          //  i j 两个位置相等，即匹配上了，有自重复
+          if(pattern[i] === pattern[j]) {
+            ++j, ++i;
+            table[i] = j;
+          } else {
+          // 不匹配的情况
+            if(j > 0)
+              j = table[j];
+            else 
+              ++i;
+          }
+        }
+      }
+
+      // console.log(table);
+      // 匹配
+      {
+        // j 认为是pattern串的位置 i认为是source串的位置
+        let i = 0, j = 0;
+        while(i < source.length) {
+          // 匹配上了，都前进一格
+          if(pattern[j] === source[i]) {
+            ++i, ++j;
+          } else {
+            // 没匹配上，pattern位置回退到table
+           if(j > 0)
+              j = table[j];
+            else 
+              ++i;
+          }
+          // 模式串匹配到头了，说明结束了
+          if (j === pattern.length)
+            return true;
+        }
+        // source串到头了
+        return false;
+      }
+    }
+    // kmp("", "abcdabce");
+    console.log(kmp("abcd", "abc"));
+  </script>
+</body>
+</html>

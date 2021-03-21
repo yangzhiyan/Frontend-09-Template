@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function find(source, pattern) {
+      let starCount = 0;
+      // 循环访问 pattern 字符串，找出来有多少个 *
+      for(let i = 0; i < pattern.length;  i++) {
+        if(pattern[i] === "*")
+          starCount ++;
+      }
+      // 没有 * 的情况，即字符串和pattern严格一一匹配
+      if(starCount === 0) {
+        for(let i = 0; i < pattern.length; i++) {
+          if(pattern[i] !== source[i] && pattern[i] !== "?")
+            return false;
+        }
+        return;
+      }
+      // pattern位置
+      let i = 0;
+      // 原字符串的 source 的位置
+      let lastIndex = 0;
+      // 将第一个 * 之前的部分匹配完
+      for(i = 0; pattern[i] !== "*"; i++) {
+        if(pattern[i] !== source[i] && pattern[i] !== "?")
+          return false;
+      }
+      // 将lastIndex更新到i
+      lastIndex = i;
+      // 循环每个*和模式串
+      for(let p = 0; p < starCount - 1; p++) {
+        i++;
+        // * 后面的格式
+        let subPattern = "";
+        while(pattern[i] !== "*") {
+          subPattern += pattern[i];
+          i++;
+        }
+        // s 和 S 互补，则可以匹配到所有字符集
+        let reg = new RegExp(subPattern.replace(/\?/g, "\\s\\S"), "g");
+        reg.lastIndex = lastIndex;
+        // console.log(reg.exec(source));
+        // 没有匹配到
+        if(!reg.exec(source))
+          return false;
+        lastIndex = reg.lastIndex;
+      }
+      // 尾巴的匹配 匹配最后一个*后面的部分
+      for(let j = 0; j <= source.length - lastIndex && pattern[pattern.length - j] !== "*"; j++) {
+        if(pattern[pattern.length - j] !== source[source.length - j]
+            && pattern[pattern.length - j] !== "?")
+            return false;
+      }
+      return true;
+    }
+  </script>
+</body>
+</html>
