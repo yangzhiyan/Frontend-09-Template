@@ -66,9 +66,6 @@
   乘法的表达式可能是 Number、MultiplicativeExpression、AdditiveExpression等一系列这样的可能性，所以其实第一种符号有三种可能性
   如果我们遇到了Number、或者MultiplicativeExpression，是不是应该直接当做乘法去处理呢？只看一个字符是不够的，需要看它第二个输入的元素是乘号除号，还是加号减号，因为原来的MultiplicativeExpression还是在的。所以我们这样就可以得到一个从左到右扫描从左到右归并的语法分析的算法，即LL语法分析。
 
-
-# 相关知识点
-  ## regExp.Exec()
   
 
 
