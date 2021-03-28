@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    let callbacks = new Map();
+    let usedReactivities = [];
+    let object = {
+      a: 1,
+      b: 2
+    }
+    let po = reactive(object);
+
+    effect(()=> {
+      console.log(po.a)
+    })
+    
+    // js中无法获取一个函数能够访问到的所有变量
+    // 在vue中，我们有一个函数，可以调用这个函数，看它实际用了哪些变量
+    // 如果引了一个普通变量，可能没法监听
+    // 引用一个reactive呢，就可以在reactive的get中获得一个监听的效果
+
+    // effect 可以直接监听po上的属性，以此来代替事件监听的一个机制
+    function effect(callback) {
+      
+      usedReactivities = [];
+      callback();
+      console.log(usedReactivities)
+      for (let reactivity of usedReactivities) {
+        if (!callbacks.has(reactivity[0])) {
+          callbacks.set(reactivity[0], new Map());
+        }
+        if (!callbacks.get(reactivity[0]).has(reactivity[1])) {
+          callbacks.get(reactivity[0]).set(reactivity[1], []);
+        }
+        callbacks.get(reactivity[0]).get(reactivity[1]).push(callback);
+      }
+      
+    }
+
+    // vue3.0 中 reactive 的实现原理 使用proxy来实现
+    // proxy用途：对对象做某种监听或者改变它行为
+    function reactive(object) {
+      return new Proxy(object, {
+        set(obj, prop, val) {
+          obj[prop] = val;
+          if (callbacks.get(obj))
+            if (callbacks.get(obj).get(prop))
+             for (let callback of callbacks.get(obj).get(prop)) {
+               callback();
+             }
+          return obj[prop];
+        },
+        get(obj, prop) {
+          usedReactivities.push([obj, prop]);
+          return obj[prop];
+        }
+      })
+    }
+
+  </script>
+</body>
+</html>

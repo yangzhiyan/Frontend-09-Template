@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    let callbacks = [];
+    let object = {
+      a: 1,
+      b: 2
+    }
+    let po = reactive(object);
+    
+    // 存在性能问题，如果给多个对象设置了effect，每次设置一个对象时，所有对象都将会被调用
+    effect(()=> {
+      console.log(po.a)
+    })
+    
+
+    // effect 可以直接监听po上的属性，以此来代替事件监听的一个机制
+    function effect(callback) {
+      callbacks.push(callback);
+    }
+
+    // vue3.0 中 reactive 的实现原理 使用proxy来实现
+    // proxy用途：对对象做某种监听或者改变它行为
+    function reactive(object) {
+      return new Proxy(object, {
+        set(obj, prop, val) {
+          obj[prop] = val;
+          for(let callback of callbacks) {
+            callback();
+          }
+          console.log(obj, prop, val);
+          return obj[prop];
+        },
+        get(obj, prop) {
+          console.log(obj, prop)
+          return obj[prop];
+        }
+      })
+    }
+
+  </script>
+</body>
+</html>
