@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<body>
+<div id="mountNode"></div>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.7.1/dist/g6.min.js"></script>
+<script>
+
+    var rootId = "JsObject";
+    var rootName = "OBJECT";
+    var nodes = [
+        "Object",
+        "Boolean",
+        "String",
+        "Number",
+        "Symbol",
+        "Date",
+        "RegExp",
+        "Promise",
+        "Proxy",
+        "Map",
+        "WeakMap",
+        "Set",
+        "WeakSet",
+        "Function",
+        "ERROR",
+        "ARRAY",
+        "BIT"
+    ];
+
+    var childMap = new Map();
+    childMap.set("ERROR", [
+        "Error",
+        "EvalError",
+        "RangeError",
+        "ReferenceError",
+        "SyntaxError",
+        "TypeError",
+        "URIError",
+    ]);
+
+    childMap.set("ARRAY", [
+        "Array",
+        "Float32Array",
+        "Float64Array",
+        "Int8Array",
+        "Int16Array",
+        "Int32Array",
+        "UInt8Array",
+        "UInt16Array",
+        "UInt32Array",
+        "UInt8ClampedArray",
+    ]);
+
+    childMap.set("BIT", [
+        "ArrayBuffer",
+        "SharedArrayBuffer",
+    ]);
+
+    const jsonData = {
+        id: rootId,
+        label: rootName,
+        type: "rect",
+        children: []
+    };
+
+    const treeGraph = new G6.TreeGraph({
+        container: 'mountNode',
+        width: window.innerWidth,
+        height: window.innerHeight,
+        modes: {
+            default: [
+                {
+                    type: 'collapse-expand',
+                    onChange(item, collapsed) {
+                        const icon = item.get('group').findByClassName('collapse-icon');
+                        if (collapsed) {
+                            icon.attr('symbol', EXPAND_ICON);
+                        } else {
+                            icon.attr('symbol', COLLAPSE_ICON);
+                        }
+                    },
+                },
+                'drag-canvas',
+                'zoom-canvas',
+            ],
+        },
+        nodeStyle: {
+            default: {
+                fill: "#ff548a",
+                stroke: "#d933c2",
+            }
+        },
+        edgeStyle: {
+            default: {
+                stroke: '#d933c2'
+            }
+        },
+        layout: {
+            type: 'compactBox',
+            direction: 'LR',
+            nodeSep: 100,
+            rankSep: 150,
+            getHGap: () => {
+                return 60
+            },
+        },
+    });
+
+    function loadJsonData() {
+        nodes.forEach((item) => {
+            let node = {
+                "id": item,
+                "label": item,
+                "type": "rect",
+            }
+            if (childMap.has(item)) {
+                let childs = childMap.get(item)
+                let children = []
+                childs.forEach((child) => {
+                    children.push({
+                        "id": child,
+                        "label": child,
+                        "type": "rect",
+                    })
+                })
+                node.children = children
+            }
+            jsonData.children.push(node)
+        })
+    }
+
+    const main = async () => {
+        loadJsonData()
+        treeGraph.data(jsonData)
+        treeGraph.render();
+    };
+    main();
+</script>
+</body>
+
+</html>
